@@ -30,9 +30,14 @@ use Closure;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use pocketmine\color\Color;
+use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
 use pocketmine\network\mcpe\protocol\types\MapImage;
 use pocketmine\player\Player;
 use pocketmine\utils\SingletonTrait;
+
+use function spl_object_hash;
+use function spl_object_id;
 
 final class MapManager{
     use SingletonTrait;
@@ -42,6 +47,9 @@ final class MapManager{
      * - Closure(int $mapId, Player|null $player) : MapImage>
      */
     private array $mapImages = [];
+
+    /** @var array<int, array<string, NetworkSession>> */
+    private array $mapListeners = [];
 
     private MapImage $emptyMapImage;
 
@@ -58,7 +66,7 @@ final class MapManager{
         while(true){
             try{
                 $uuid = random_int(0, PHP_INT_MAX);
-                if(!$this->isRegisteredMap($uuid)){
+                if(!$this->hasMapImage($uuid)){
                     return $uuid;
                 }
             }catch(Exception){
@@ -66,28 +74,23 @@ final class MapManager{
         }
     }
 
-    public function registerMapImage(int $mapUuid, MapImage|Closure $mapImage, bool $force = false) : bool{
+    public function setMapImage(int $mapUuid, MapImage|Closure $mapImage) : void{
         if(isset($this->mapImages[$mapUuid])){
-            if($force){
-                $this->mapImages[$mapUuid] = $mapImage;
-                return true;
+            $this->mapImages[$mapUuid] = $mapImage;
+            foreach($this->mapListeners[$mapUuid] as $session){
+                $this->sendMapImage($mapUuid, $session);
             }
-            return false;
+        }else{
+            $this->mapImages[$mapUuid] = $mapImage;
+            $this->mapListeners[$mapUuid] = [];
         }
-
-        $this->mapImages[$mapUuid] = $mapImage;
-        return true;
     }
 
-    public function unregisterMapImage(int $mapUuid) : bool{
-        if($this->isRegisteredMap($mapUuid)){
-            unset($this->mapImages[$mapUuid]);
-            return true;
-        }
-        return false;
+    public function removeMapImage(int $mapUuid) : void{
+        unset($this->mapImages[$mapUuid], $this->mapListeners[$mapUuid]);
     }
 
-    public function isRegisteredMap(int $mapUuid) : bool{
+    public function hasMapImage(int $mapUuid) : bool{
         return isset($this->mapImages[$mapUuid]);
     }
 
@@ -98,5 +101,31 @@ final class MapManager{
         }
 
         return $mapImage($mapUuid, $player);
+    }
+
+    /** @internal */
+    public function addMapListener(int $mapUuid, NetworkSession $session) : void{
+        $this->mapListeners[$mapUuid][spl_object_id($session)] = $session;
+    }
+
+    /** @internal */
+    public function removeMapListener(NetworkSession $session) : void{
+        $hash = spl_object_hash($session);
+        foreach($this->mapListeners as &$sessions){
+            if(isset($sessions[$hash])){
+                unset($sessions[$hash]);
+            }
+        }
+    }
+
+    public function sendMapImage(int $mapUuid, NetworkSession $session) : void{
+        $pk = new ClientboundMapItemDataPacket();
+        $pk->mapId = $mapUuid;
+        $pk->colors = $this->getMapImage($mapUuid, $session->getPlayer());
+        $pk->scale = 1;
+        $pk->type = ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE;
+        $session->sendDataPacket($pk);
+
+        $this->addMapListener($mapUuid, $session);
     }
 }

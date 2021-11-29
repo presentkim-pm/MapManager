@@ -27,12 +27,12 @@ declare(strict_types=1);
 namespace ref\api\mapmanager;
 
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\inventory\CreativeInventory;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIdentifier;
 use pocketmine\item\ItemIds;
-use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
 use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\plugin\PluginBase;
 use ref\api\mapmanager\item\FilledMap;
@@ -50,14 +50,11 @@ final class Main extends PluginBase implements Listener{
     public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
         $packet = $event->getPacket();
         if($packet instanceof MapInfoRequestPacket){
-            $session = $event->getOrigin();
-
-            $pk = new ClientboundMapItemDataPacket();
-            $pk->mapId = $packet->mapId;
-            $pk->colors = MapManager::getInstance()->getMapImage($packet->mapId, $session->getPlayer());
-            $pk->type = ClientboundMapItemDataPacket::BITFLAG_MAP_CREATION;
-            $pk->scale = 1;
-            $session->sendDataPacket($pk);
+            MapManager::getInstance()->sendMapImage($packet->mapId, $event->getOrigin());
         }
+    }
+
+    public function onPlayerQuitEvent(PlayerQuitEvent $event) : void{
+        MapManager::getInstance()->removeMapListener($event->getPlayer()->getNetworkSession());
     }
 }
