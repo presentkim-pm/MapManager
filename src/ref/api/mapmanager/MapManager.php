@@ -27,7 +27,6 @@ declare(strict_types=1);
 namespace ref\api\mapmanager;
 
 use Closure;
-use Exception;
 use JetBrains\PhpStorm\Pure;
 use pocketmine\color\Color;
 use pocketmine\network\mcpe\NetworkSession;
@@ -36,6 +35,7 @@ use pocketmine\network\mcpe\protocol\types\MapImage;
 use pocketmine\player\Player;
 use pocketmine\utils\SingletonTrait;
 
+use function lcg_value;
 use function spl_object_hash;
 use function spl_object_id;
 
@@ -64,12 +64,9 @@ final class MapManager{
 
     public function getRandomUuid() : int{
         while(true){
-            try{
-                $uuid = random_int(0, PHP_INT_MAX);
-                if(!$this->hasMapImage($uuid)){
-                    return $uuid;
-                }
-            }catch(Exception){
+            $uuid = (int) (lcg_value() * PHP_INT_MAX);
+            if(!$this->hasMapImage($uuid)){
+                return $uuid;
             }
         }
     }
