@@ -30,15 +30,11 @@ use Closure;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use pocketmine\color\Color;
-use pocketmine\event\Listener;
-use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
-use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\network\mcpe\protocol\types\MapImage;
 use pocketmine\player\Player;
 use pocketmine\utils\SingletonTrait;
 
-final class MapManager implements Listener{
+final class MapManager{
     use SingletonTrait;
 
     /**
@@ -71,7 +67,11 @@ final class MapManager implements Listener{
     }
 
     public function registerMapImage(int $mapUuid, MapImage|Closure $mapImage, bool $force = false) : bool{
-        if(!$force && isset($this->mapImages[$mapUuid])){
+        if(isset($this->mapImages[$mapUuid])){
+            if($force){
+                $this->mapImages[$mapUuid] = $mapImage;
+                return true;
+            }
             return false;
         }
 
@@ -98,19 +98,5 @@ final class MapManager implements Listener{
         }
 
         return $mapImage($mapUuid, $player);
-    }
-
-    public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
-        $packet = $event->getPacket();
-        if($packet instanceof MapInfoRequestPacket){
-            $session = $event->getOrigin();
-
-            $pk = new ClientboundMapItemDataPacket();
-            $pk->mapId = $packet->mapId;
-            $pk->colors = $this->getMapImage($packet->mapId, $session->getPlayer());
-            $pk->type = ClientboundMapItemDataPacket::BITFLAG_MAP_CREATION;
-            $pk->scale = 1;
-            $session->sendDataPacket($pk);
-        }
     }
 }

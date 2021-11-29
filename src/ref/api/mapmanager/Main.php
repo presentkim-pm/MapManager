@@ -26,20 +26,38 @@ declare(strict_types=1);
 
 namespace ref\api\mapmanager;
 
+use pocketmine\event\Listener;
+use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\inventory\CreativeInventory;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIdentifier;
 use pocketmine\item\ItemIds;
+use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
+use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\plugin\PluginBase;
 use ref\api\mapmanager\item\FilledMap;
 
-final class Main extends PluginBase{
+final class Main extends PluginBase implements Listener{
     protected function onEnable() : void{
         $filledMap = new FilledMap(new ItemIdentifier(ItemIds::FILLED_MAP, 0), "Filled Map");
         $filledMap->setUuid(0); // Prevent map id set to -1, -1 will be broken client
         ItemFactory::getInstance()->register($filledMap, true);
         CreativeInventory::getInstance()->add($filledMap);
 
-        $this->getServer()->getPluginManager()->registerEvents(MapManager::getInstance(), $this);
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
+
+    public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
+        $packet = $event->getPacket();
+        if($packet instanceof MapInfoRequestPacket){
+            $session = $event->getOrigin();
+
+            $pk = new ClientboundMapItemDataPacket();
+            $pk->mapId = $packet->mapId;
+            $pk->colors = MapManager::getInstance()->getMapImage($packet->mapId, $session->getPlayer());
+            $pk->type = ClientboundMapItemDataPacket::BITFLAG_MAP_CREATION;
+            $pk->scale = 1;
+            $session->sendDataPacket($pk);
+        }
     }
 }
