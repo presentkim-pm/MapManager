@@ -120,7 +120,6 @@ final class MapManager{
         $pk->mapId = $mapUuid;
         $pk->colors = $this->getMapImage($mapUuid, $session->getPlayer());
         $pk->scale = 1;
-        $pk->type = ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE;
         $session->sendDataPacket($pk);
 
         $this->addMapListener($mapUuid, $session);
