@@ -119,7 +119,7 @@ final class MapManager{
         $pk = new ClientboundMapItemDataPacket();
         $pk->mapId = $mapUuid;
         $pk->colors = $this->getMapImage($mapUuid, $session->getPlayer());
-        $pk->scale = 1;
+        $pk->scale = 1; // TODO: Implement scaling
         $session->sendDataPacket($pk);
 
         $this->addMapListener($mapUuid, $session);

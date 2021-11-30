@@ -33,21 +33,18 @@ final class FilledMap extends Item{
     /**
      * @url https://minecraft.fandom.com/wiki/Bedrock_Edition_level_format/Item_format#Filled_Map
      */
-    public const TAG_MAP_IS_INIT = "map_is_init";                    // bool (Whether the map is initialized)
     public const TAG_MAP_IS_DISPLAY_PLAYERS = "map_display_players"; // bool (Whether the map displays player markers)
-    public const TAG_MAP_IS_SCALING = "map_is_scaling";              // bool (Whether the map is scaled)
 
     public const TAG_MAP_UUID = "map_uuid";                          // long (The uuid of the map used in this item)
     public const TAG_MAP_NAME_INDEX = "map_name_index";              // int (The index of the map's name)
-    public const TAG_MAP_SCALE = "map_scale";                        // int (The scale of map)
 
-    public function isInit() : bool{
-        return (bool) $this->getNamedTag()->getByte(self::TAG_MAP_IS_INIT);
-    }
-
-    public function setInit(bool $value) : void{
-        $this->getNamedTag()->setByte(self::TAG_MAP_IS_INIT, (int) $value);
-    }
+    /**
+     * MAP_IS_INIT is unnecessary
+     * MAP_IS_SCALING and TAG_MAP_SCALE is not working
+     */
+    //public const TAG_MAP_IS_INIT = "map_is_init";                    // bool (Whether the map is initialized)
+    //public const TAG_MAP_IS_SCALING = "map_is_scaling";              // bool (Whether the map is scaled)
+    //public const TAG_MAP_SCALE = "map_scale";                        // int (The scale of map)
 
     public function isDisplayPlayers() : bool{
         return (bool) $this->getNamedTag()->getByte(self::TAG_MAP_IS_DISPLAY_PLAYERS);
@@ -55,14 +52,6 @@ final class FilledMap extends Item{
 
     public function setDisplayPlayers(bool $value) : void{
         $this->getNamedTag()->setByte(self::TAG_MAP_IS_DISPLAY_PLAYERS, (int) $value);
-    }
-
-    public function isScaling() : bool{
-        return (bool) $this->getNamedTag()->getByte(self::TAG_MAP_IS_SCALING);
-    }
-
-    public function setScaling(bool $value) : void{
-        $this->getNamedTag()->setByte(self::TAG_MAP_IS_SCALING, (int) $value);
     }
 
     public function getUuid() : int{
@@ -85,16 +74,5 @@ final class FilledMap extends Item{
             throw new UnderflowException("Uuid of Map must be greater than or equal to 0. '$value' given.");
         }
         $this->getNamedTag()->setInt(self::TAG_MAP_NAME_INDEX, $value);
-    }
-
-    public function getScale() : int{
-        return $this->getNamedTag()->getInt(self::TAG_MAP_SCALE, 1);
-    }
-
-    public function setScale(int $value) : void{
-        if($value < 1){
-            throw new UnderflowException("Uuid of Map must be greater than or equal to 1. '$value' given.");
-        }
-        $this->getNamedTag()->setInt(self::TAG_MAP_SCALE, $value);
     }
 }
