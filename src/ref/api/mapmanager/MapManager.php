@@ -123,10 +123,9 @@ final class MapManager{
     }
 
     public static function nextId() : int{
-        $instance = self::getInstance();
         while(true){
             $nextId = (int) (lcg_value() * PHP_INT_MAX);
-            if(!$instance->isRegistered($nextId)){
+            if(self::$instance === null || !self::$instance->isRegistered($nextId)){
                 return $nextId;
             }
         }
