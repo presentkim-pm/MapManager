@@ -45,7 +45,7 @@ final class MapManager{
     private Map $fallbackMap;
 
     private function __construct(){
-        $this->fallbackMap = new StaticMap(self::nextId(), MapImageUtils::generateMapImage(new Color(0, 0, 0, 0), 1, 1));
+        $this->fallbackMap = new StaticMap(self::nextId(), MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 1, 1));
     }
 
     /**
@@ -88,7 +88,7 @@ final class MapManager{
     public function unregister(int $id, bool $clear = true) : void{
         if(isset($this->maps[$id])){
             if($clear){
-                $this->maps[$id]->broadcastMapImage(MapImageUtils::generateMapImage(new Color(0, 0, 0, 0), 128, 128));
+                $this->maps[$id]->broadcastMapImage(MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 128, 128));
             }
             unset($this->maps[$id]);
         }

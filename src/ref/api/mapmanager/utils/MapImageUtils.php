@@ -35,8 +35,8 @@ final class MapImageUtils{
     private function __construct(){ }
 
     /** Returns a one color image object of the given size. */
-    public static function generateMapImage(Color $color, int $width, int $height) : MapImage{
-        return new MapImage(array_fill(0, $height, array_fill(0, $width, $color)));
+    public static function fromOneColor(Color $color, int $targetWidth, int $targetHeight) : MapImage{
+        return new MapImage(array_fill(0, $targetHeight, array_fill(0, $targetWidth, $color)));
     }
 
     public static function validateSize(MapImage $image) : bool{
