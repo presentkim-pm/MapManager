@@ -86,7 +86,7 @@ final class MapManager{
     public function unregister(int $id, bool $clear = true) : void{
         if(isset($this->maps[$id])){
             if($clear){
-                $this->maps[$id]->broadcastMapImage(MapImageUtils::largestMapImage(new Color(0, 0, 0, 0)));
+                $this->maps[$id]->broadcastMapImage(MapImageUtils::generateMapImage(new Color(0, 0, 0, 0), 128, 128));
             }
             unset($this->maps[$id]);
         }

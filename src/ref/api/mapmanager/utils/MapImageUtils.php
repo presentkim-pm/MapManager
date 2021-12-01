@@ -34,24 +34,9 @@ use function array_fill;
 final class MapImageUtils{
     private function __construct(){ }
 
-    /** Returns the smallest 1x1 map image. */
-    public static function smallestMapImage(Color $color) : MapImage{
-        /** @var MapImage $cache */
-        static $cache;
-        if(!isset($cache)){
-            $cache = new MapImage([[$color]]);
-        }
-        return $cache;
-    }
-
-    /** Returns the largest 128x128 map image. */
-    public static function largestMapImage(Color $color) : MapImage{
-        /** @var MapImage $cache */
-        static $cache;
-        if(!isset($cache)){
-            $cache = new MapImage(array_fill(0, 128, array_fill(0, 128, $color)));
-        }
-        return $cache;
+    /** Returns a one color image object of the given size. */
+    public static function generateMapImage(Color $color, int $width, int $height) : MapImage{
+        return new MapImage(array_fill(0, $height, array_fill(0, $width, $color)));
     }
 
     public static function validateSize(MapImage $image) : bool{
