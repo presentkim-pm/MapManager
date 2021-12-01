@@ -37,7 +37,11 @@ use pocketmine\plugin\PluginBase;
 use ref\api\mapmanager\item\FilledMap;
 
 final class Main extends PluginBase implements Listener{
+    private MapManager $mapManager;
+
     protected function onEnable() : void{
+        $this->mapManager = MapManager::getInstance();
+
         $filledMap = new FilledMap(new ItemIdentifier(ItemIds::FILLED_MAP, 0), "Filled Map");
         $filledMap->setUuid(0); // Prevent map id set to -1, -1 will be broken client
         ItemFactory::getInstance()->register($filledMap, true);
@@ -45,14 +49,18 @@ final class Main extends PluginBase implements Listener{
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
     }
 
+    /** @priority LOWEST */
     public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
         $packet = $event->getPacket();
         if($packet instanceof MapInfoRequestPacket){
-            MapManager::getInstance()->sendMapImage($packet->mapId, $event->getOrigin());
+            $this->mapManager->get($packet->mapId)?->sendMapImage($event->getOrigin());
         }
     }
 
+    /** @priority LOWEST */
     public function onPlayerQuitEvent(PlayerQuitEvent $event) : void{
-        MapManager::getInstance()->removeMapListener($event->getPlayer()->getNetworkSession());
+        foreach($this->mapManager->getAllMap() as $map){
+            $map->removeListener($event->getPlayer()->getNetworkSession());
+        }
     }
 }

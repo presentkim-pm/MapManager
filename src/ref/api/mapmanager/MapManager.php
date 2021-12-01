@@ -26,102 +26,94 @@ declare(strict_types=1);
 
 namespace ref\api\mapmanager;
 
-use Closure;
-use JetBrains\PhpStorm\Pure;
+use InvalidArgumentException;
 use pocketmine\color\Color;
-use pocketmine\network\mcpe\NetworkSession;
-use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
 use pocketmine\network\mcpe\protocol\types\MapImage;
-use pocketmine\player\Player;
 use pocketmine\utils\SingletonTrait;
+use ref\api\mapmanager\map\Map;
+use ref\api\mapmanager\map\StaticMap;
 
+use ref\api\mapmanager\utils\MapImageUtils;
+
+use function array_fill;
 use function lcg_value;
-use function spl_object_hash;
-use function spl_object_id;
 
 final class MapManager{
     use SingletonTrait;
 
+    /** @var array<int, Map> */
+    private array $maps = [];
+
+    private function __construct(){ }
+
     /**
-     * @var array<int, MapImage|Closure>
-     * - Closure(int $mapId, Player|null $player) : MapImage>
+     * Register the given map to map manager.
+     *
+     * @param bool $force Whether to override existing registrations
+     *
+     * @throws InvalidArgumentException if attempted to override an already-registered map ID without specifying the $force parameter.
      */
-    private array $mapImages = [];
-
-    /** @var array<int, array<string, NetworkSession>> */
-    private array $mapListeners = [];
-
-    private MapImage $emptyMapImage;
-
-    public function __construct(){
-        $this->emptyMapImage = new MapImage([[new Color(0, 0, 0, 0)]]);
+    public function register(Map $map, bool $force = false) : void{
+        $id = $map->getId();
+        if(isset($this->maps[$id])){
+            if($force){
+                $map->setListeners($this->maps[$id]->getListeners());
+            }else{
+                throw new InvalidArgumentException("Map registration $id conflicts with an existing map");
+            }
+        }
+        $this->maps[$id] = $map;
+        $map->broadcastMapImage();
     }
 
-    #[Pure]
-    public function getEmptyMapImage() : MapImage{
-        return $this->emptyMapImage;
+    /**
+     * Register the given map ID and map image to map manager.
+     * It automatically create StaticMap instance amd register that.
+     *
+     * @param bool $force Whether to override existing registrations
+     *
+     * @throws InvalidArgumentException if attempted to override an already-registered map ID without specifying the $force parameter.
+     */
+    public function registerFrom(int $mapId, MapImage $map, bool $force = false) : void{
+        $this->register(new StaticMap($mapId, $map), $force);
     }
 
-    public function getRandomUuid() : int{
+    /**
+     * Unregister the given map to map manager.
+     *
+     * @param bool $clear Whether to remove map data from map listeners
+     */
+    public function unregister(int $id, bool $clear = true) : void{
+        if(isset($this->maps[$id])){
+            if($clear){
+                $this->maps[$id]->broadcastMapImage(MapImageUtils::largestMapImage(new Color(0, 0, 0, 0)));
+            }
+            unset($this->maps[$id]);
+        }
+    }
+
+    /** Returns whether a specified map ID is already registered in the map manager. */
+    public function isRegistered(int $id) : bool{
+        return isset($this->maps[$id]);
+    }
+
+    /** Returns the map if the specified map ID is already registered in the map manager. */
+    public function get(int $id) : ?Map{
+        return $this->maps[$id] ?? null;
+    }
+
+    /** @return Map[] */
+    public function getAllMap() : array{
+        return array_values($this->maps);
+    }
+
+    public static function nextId() : int{
+        $instance = self::getInstance();
         while(true){
-            $uuid = (int) (lcg_value() * PHP_INT_MAX);
-            if(!$this->hasMapImage($uuid)){
-                return $uuid;
+            $nextId = (int) (lcg_value() * PHP_INT_MAX);
+            if(!$instance->isRegistered($nextId)){
+                return $nextId;
             }
         }
-    }
-
-    public function setMapImage(int $mapUuid, MapImage|Closure $mapImage) : void{
-        if(isset($this->mapImages[$mapUuid])){
-            $this->mapImages[$mapUuid] = $mapImage;
-            foreach($this->mapListeners[$mapUuid] as $session){
-                $this->sendMapImage($mapUuid, $session);
-            }
-        }else{
-            $this->mapImages[$mapUuid] = $mapImage;
-            $this->mapListeners[$mapUuid] = [];
-        }
-    }
-
-    public function removeMapImage(int $mapUuid) : void{
-        unset($this->mapImages[$mapUuid], $this->mapListeners[$mapUuid]);
-    }
-
-    public function hasMapImage(int $mapUuid) : bool{
-        return isset($this->mapImages[$mapUuid]);
-    }
-
-    public function getMapImage(int $mapUuid, Player|null $player = null) : MapImage{
-        $mapImage = $this->mapImages[$mapUuid] ?? $this->emptyMapImage;
-        if($mapImage instanceof MapImage){
-            return $mapImage;
-        }
-
-        return $mapImage($mapUuid, $player);
-    }
-
-    /** @internal */
-    public function addMapListener(int $mapUuid, NetworkSession $session) : void{
-        $this->mapListeners[$mapUuid][spl_object_id($session)] = $session;
-    }
-
-    /** @internal */
-    public function removeMapListener(NetworkSession $session) : void{
-        $hash = spl_object_hash($session);
-        foreach($this->mapListeners as &$sessions){
-            if(isset($sessions[$hash])){
-                unset($sessions[$hash]);
-            }
-        }
-    }
-
-    public function sendMapImage(int $mapUuid, NetworkSession $session) : void{
-        $pk = new ClientboundMapItemDataPacket();
-        $pk->mapId = $mapUuid;
-        $pk->colors = $this->getMapImage($mapUuid, $session->getPlayer());
-        $pk->scale = 1; // TODO: Implement scaling
-        $session->sendDataPacket($pk);
-
-        $this->addMapListener($mapUuid, $session);
     }
 }
