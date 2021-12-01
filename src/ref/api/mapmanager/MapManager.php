@@ -32,10 +32,8 @@ use pocketmine\network\mcpe\protocol\types\MapImage;
 use pocketmine\utils\SingletonTrait;
 use ref\api\mapmanager\map\Map;
 use ref\api\mapmanager\map\StaticMap;
-
 use ref\api\mapmanager\utils\MapImageUtils;
 
-use function array_fill;
 use function lcg_value;
 
 final class MapManager{
@@ -44,7 +42,11 @@ final class MapManager{
     /** @var array<int, Map> */
     private array $maps = [];
 
-    private function __construct(){ }
+    private Map $fallbackMap;
+
+    private function __construct(){
+        $this->fallbackMap = new StaticMap(self::nextId(), MapImageUtils::generateMapImage(new Color(0, 0, 0, 0), 1, 1));
+    }
 
     /**
      * Register the given map to map manager.
@@ -97,8 +99,21 @@ final class MapManager{
         return isset($this->maps[$id]);
     }
 
-    /** Returns the map if the specified map ID is already registered in the map manager. */
-    public function get(int $id) : ?Map{
+    /**
+     * Returns the map
+     *   if the specified map ID is already registered in the map manager.
+     *   Otherwise, returns the fallback map.
+     */
+    public function get(int $id) : Map{
+        return $this->maps[$id] ?? $this->fallbackMap;
+    }
+
+    /**
+     * Returns the map
+     *   if the specified map ID is already registered in the map manager.
+     *   Otherwise, returns null.
+     */
+    public function getOrNull(int $id) : ?Map{
         return $this->maps[$id] ?? null;
     }
 
