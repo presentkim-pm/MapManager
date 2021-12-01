@@ -53,7 +53,7 @@ final class Main extends PluginBase implements Listener{
     public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
         $packet = $event->getPacket();
         if($packet instanceof MapInfoRequestPacket){
-            $this->mapManager->get($packet->mapId)?->sendMapImage($event->getOrigin());
+            $this->mapManager->get($packet->mapId)?->sendImage($event->getOrigin());
         }
     }
 

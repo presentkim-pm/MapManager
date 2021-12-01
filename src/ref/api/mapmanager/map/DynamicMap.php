@@ -50,7 +50,7 @@ final class DynamicMap extends Map{
         $this->mapImageProvider = $mapImageProvider;
     }
 
-    public function getMapImage(NetworkSession|null $session = null) : MapImage{
+    public function getImage(NetworkSession|null $session = null) : MapImage{
         return ($this->mapImageProvider)($session);
     }
 }

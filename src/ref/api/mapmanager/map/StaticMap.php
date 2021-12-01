@@ -39,20 +39,20 @@ class StaticMap extends Map{
         $this->mapImage = $mapImageProvider;
     }
 
-    public function getMapImage(NetworkSession|null $session = null) : MapImage{
+    public function getImage(NetworkSession|null $session = null) : MapImage{
         return $this->mapImage;
     }
 
-    public function setMapImage(MapImage|Closure $mapImage, bool $sendUpdate = true) : void{
+    public function setImage(MapImage|Closure $mapImage, bool $sendUpdate = true) : void{
         $this->mapImage = $mapImage;
         if($sendUpdate){
             foreach($this->listeners as $session){
-                $this->sendMapImage($session, $mapImage);
+                $this->sendImage($session, $mapImage);
             }
         }
     }
 
-    public function updateMapImage(MapImage $mapImage, int $xOffset = 0, int $yOffset = 0) : void{
+    public function updateImage(MapImage $mapImage, int $xOffset = 0, int $yOffset = 0) : void{
         if(($maxX = $xOffset + $mapImage->getWidth()) >= $this->mapImage->getWidth()){
             throw new OverflowException("Max x is out of range({$this->mapImage->getWidth()}), given $maxX.");
         }
@@ -67,6 +67,6 @@ class StaticMap extends Map{
             }
         }
         $this->mapImage = new MapImage($pixels);
-        $this->broadcastMapImage($mapImage, $xOffset, $yOffset);
+        $this->broadcastImage($mapImage, $xOffset, $yOffset);
     }
 }

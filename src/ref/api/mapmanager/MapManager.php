@@ -65,7 +65,7 @@ final class MapManager{
             }
         }
         $this->maps[$id] = $map;
-        $map->broadcastMapImage();
+        $map->broadcastImage();
     }
 
     /**
@@ -88,7 +88,7 @@ final class MapManager{
     public function unregister(int $id, bool $clear = true) : void{
         if(isset($this->maps[$id])){
             if($clear){
-                $this->maps[$id]->broadcastMapImage(MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 128, 128));
+                $this->maps[$id]->broadcastImage(MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 128, 128));
             }
             unset($this->maps[$id]);
         }
