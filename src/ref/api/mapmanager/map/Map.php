@@ -52,6 +52,8 @@ abstract class Map{
 
     public function setMapImage(MapImage $mapImage, bool $sendUpdate = true) : void{ }
 
+    public function updateMapImage(MapImage $mapImage, int $xOffset = 0, int $yOffset = 0) : void{ }
+
     /** @return NetworkSession[] */
     final public function getListeners() : array{
         return array_values($this->listeners);
@@ -73,20 +75,22 @@ abstract class Map{
     }
 
     /**  @param NetworkSession[]|null $listeners */
-    final public function broadcastMapImage(MapImage|null $mapImage = null, array $listeners = null) : void{
+    final public function broadcastMapImage(MapImage|null $mapImage = null, int $xOffset = 0, int $yOffset = 0, array $listeners = null) : void{
         if($listeners === null){
             $listeners = $this->listeners;
         }
         foreach($listeners as $session){
-            $this->sendMapImage($session, $mapImage ?? null);
+            $this->sendMapImage($session, $mapImage ?? null, $xOffset, $yOffset);
         }
     }
 
-    final public function sendMapImage(NetworkSession $session, MapImage|null $mapImage = null) : void{
+    final public function sendMapImage(NetworkSession $session, MapImage|null $mapImage = null, int $xOffset = 0, int $yOffset = 0) : void{
         $pk = new ClientboundMapItemDataPacket();
         $pk->mapId = $this->getId();
         $pk->colors = $mapImage ?? $this->getMapImage($session);
         $pk->scale = 1; // TODO: Implement scaling
+        $pk->xOffset = $xOffset;
+        $pk->yOffset = $yOffset;
         $session->sendDataPacket($pk);
 
         $this->addListener($session);
