@@ -45,7 +45,7 @@ final class MapManager{
     private Map $fallbackMap;
 
     private function __construct(){
-        $this->fallbackMap = new StaticMap(self::nextId(), MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 1, 1));
+        $this->fallbackMap = new StaticMap(0, MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 1, 1));
     }
 
     /**
@@ -123,9 +123,10 @@ final class MapManager{
     }
 
     public static function nextId() : int{
+        $instance = self::getInstance();
         while(true){
             $nextId = (int) (lcg_value() * PHP_INT_MAX);
-            if(self::$instance === null || !self::$instance->isRegistered($nextId)){
+            if(!$instance->isRegistered($nextId)){
                 return $nextId;
             }
         }
