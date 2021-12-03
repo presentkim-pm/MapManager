@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace ref\api\mapmanager\item;
 
 use pocketmine\item\Item;
+use pocketmine\item\ItemIdentifier;
+use pocketmine\item\ItemIds;
 use UnderflowException;
 
 final class FilledMap extends Item{
@@ -74,5 +76,12 @@ final class FilledMap extends Item{
             throw new UnderflowException("Uuid of Map must be greater than or equal to 0. '$value' given.");
         }
         $this->getNamedTag()->setInt(self::TAG_MAP_NAME_INDEX, $value);
+    }
+
+    public static function create(int $mapId, bool $displayPlayers = true) : self{
+        $map = new self(new ItemIdentifier(ItemIds::FILLED_MAP, 0), "Filled Map");
+        $map->setUuid($mapId);
+        $map->setDisplayPlayers($displayPlayers);
+        return $map;
     }
 }
