@@ -52,30 +52,39 @@ final class FilledMap extends Item{
         return (bool) $this->getNamedTag()->getByte(self::TAG_MAP_IS_DISPLAY_PLAYERS);
     }
 
-    public function setDisplayPlayers(bool $value) : void{
+    /** @return $this */
+    public function setDisplayPlayers(bool $value) : self{
         $this->getNamedTag()->setByte(self::TAG_MAP_IS_DISPLAY_PLAYERS, (int) $value);
+
+        return $this;
     }
 
     public function getUuid() : int{
         return $this->getNamedTag()->getLong(self::TAG_MAP_UUID, 0);
     }
 
-    public function setUuid(int $value) : void{
+    /** @return $this */
+    public function setUuid(int $value) : self{
         if($value < 0){
             throw new UnderflowException("Uuid of Map must be greater than or equal to 0. '$value' given.");
         }
         $this->getNamedTag()->setLong(self::TAG_MAP_UUID, $value);
+
+        return $this;
     }
 
     public function getNameIndex() : int{
         return $this->getNamedTag()->getInt(self::TAG_MAP_NAME_INDEX, 0);
     }
 
-    public function setNameIndex(int $value) : void{
+    /** @return $this */
+    public function setNameIndex(int $value) : self{
         if($value < 0){
             throw new UnderflowException("Uuid of Map must be greater than or equal to 0. '$value' given.");
         }
         $this->getNamedTag()->setInt(self::TAG_MAP_NAME_INDEX, $value);
+
+        return $this;
     }
 
     public static function create(int $mapId, bool $displayPlayers = true) : self{
