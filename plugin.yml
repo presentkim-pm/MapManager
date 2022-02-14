@@ -5,5 +5,4 @@ version: 1.0.0
 api: [ 4.0.0 ]
 authors: [ ref-team, PresentKim ]
 description: A simple map data manager (add filled map item)
-mcpe-protocol: [ 471, 475 ]
 ...
