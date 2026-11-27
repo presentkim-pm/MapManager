@@ -34,7 +34,7 @@ use ref\api\mapmanager\map\Map;
 use ref\api\mapmanager\map\StaticMap;
 use ref\api\mapmanager\utils\MapImageUtils;
 
-use function lcg_value;
+use function random_int;
 
 final class MapManager{
     use SingletonTrait;
@@ -125,7 +125,7 @@ final class MapManager{
     public static function nextId() : int{
         $instance = self::getInstance();
         while(true){
-            $nextId = (int) (lcg_value() * PHP_INT_MAX);
+            $nextId = random_int(1, PHP_INT_MAX);
             if(!$instance->isRegistered($nextId)){
                 return $nextId;
             }

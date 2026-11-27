@@ -44,6 +44,9 @@ final class MapImageUtils{
 
     /** Auto resize with nearest-neighbor algorithm */
     public static function fromPixels(array $input, int $targetWidth, int $targetHeight) : MapImage{
+        if(count($input) === 0){
+            throw new InvalidArgumentException("No pixels provided");
+        }
         $sourceWidth = null;
         foreach($input as $row){
             if($sourceWidth === null){

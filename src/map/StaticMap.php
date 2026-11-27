@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace ref\api\mapmanager\map;
 
-use Closure;
 use OverflowException;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\types\MapImage;
@@ -43,7 +42,7 @@ class StaticMap extends Map{
         return $this->mapImage;
     }
 
-    public function setImage(MapImage|Closure $mapImage, bool $sendUpdate = true) : void{
+    public function setImage(MapImage $mapImage, bool $sendUpdate = true) : void{
         $this->mapImage = $mapImage;
         if($sendUpdate){
             foreach($this->listeners as $session){
@@ -53,11 +52,11 @@ class StaticMap extends Map{
     }
 
     public function updateImage(MapImage $mapImage, int $xOffset = 0, int $yOffset = 0) : void{
-        if(($maxX = $xOffset + $mapImage->getWidth()) >= $this->mapImage->getWidth()){
+        if(($maxX = $xOffset + $mapImage->getWidth()) > $this->mapImage->getWidth()){
             throw new OverflowException("Max x is out of range({$this->mapImage->getWidth()}), given $maxX.");
         }
-        if(($maxY = $yOffset + $mapImage->getHeight()) >= $this->mapImage->getHeight()){
-            throw new OverflowException("Max y is out of range({$this->mapImage->getHeight()}), given $maxY");
+        if(($maxY = $yOffset + $mapImage->getHeight()) > $this->mapImage->getHeight()){
+            throw new OverflowException("Max y is out of range({$this->mapImage->getHeight()}), given $maxY.");
         }
         $pixels = $this->mapImage->getPixels();
         $overlap = $mapImage->getPixels();

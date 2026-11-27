@@ -30,6 +30,7 @@ namespace ref\api\mapmanager\map;
 use pocketmine\color\Color;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
+use pocketmine\network\mcpe\protocol\types\BlockPosition;
 use pocketmine\network\mcpe\protocol\types\MapDecoration;
 use pocketmine\network\mcpe\protocol\types\MapImage;
 use pocketmine\network\mcpe\protocol\types\MapTrackedObject;
@@ -40,17 +41,14 @@ use function min;
 use function spl_object_id;
 
 abstract class Map{
-    private int $id;
 
-    /** @var array<string, NetworkSession> */
+    /** @var array<int, NetworkSession> */
     protected array $listeners = [];
 
     /** @var array<MapMarker> */
     protected array $markers = [];
 
-    protected function __construct(int $id){
-        $this->id = $id;
-    }
+    protected function __construct(private readonly int $id){ }
 
     final public function getId() : int{
         return $this->id;
@@ -67,9 +65,12 @@ abstract class Map{
         return array_values($this->listeners);
     }
 
-    /** @param $listeners array<int, NetworkSession> */
+    /** @param NetworkSession[] $listeners */
     final public function setListeners(array $listeners = []) : void{
-        $this->listeners = $listeners;
+        $this->listeners = [];
+        foreach($listeners as $session){
+            $this->listeners[spl_object_id($session)] = $session;
+        }
     }
 
     /** @internal */
@@ -110,7 +111,7 @@ abstract class Map{
     }
 
     /**  @param NetworkSession[]|null $listeners */
-    final public function broadcastMarkers(array $listeners = null) : void{
+    final public function broadcastMarkers(?array $listeners = null) : void{
         if($listeners === null){
             $listeners = $this->listeners;
         }
@@ -119,16 +120,25 @@ abstract class Map{
         }
     }
 
-    final public function sendMarkers(NetworkSession $session) : void{
+    private function createPacket() : ClientboundMapItemDataPacket{
         $pk = new ClientboundMapItemDataPacket();
         $pk->mapId = $this->getId();
+        $pk->origin = new BlockPosition(0, 0, 0);
         $pk->scale = 0; // TODO: Implement scaling
+        return $pk;
+    }
+
+    final public function sendMarkers(NetworkSession $session) : void{
+        $pk = $this->createPacket();
+        // Always send the (possibly empty) lists, because a missing list leaves the markers of the client untouched
+        $pk->decorations = [];
+        $pk->trackedEntities = [];
         foreach($this->markers as $hashId => $marker){
             $pk->decorations[] = new MapDecoration(
                 $marker->icon,
-                (int) ($marker->rotation / 22.5),
-                (int) max(-128, min(127, $marker->x * 2 - 128)),
-                (int) max(-128, min(127, $marker->y * 2 - 128)),
+                ((int) ($marker->rotation / 22.5)) & 0xf,
+                ((int) max(-128, min(127, $marker->x * 2 - 128))) & 0xff,
+                ((int) max(-128, min(127, $marker->y * 2 - 128))) & 0xff,
                 "",
                 $marker->color ?? new Color(255, 255, 255)
             );
@@ -141,20 +151,18 @@ abstract class Map{
     }
 
     /**  @param NetworkSession[]|null $listeners */
-    final public function broadcastImage(MapImage|null $mapImage = null, int $xOffset = 0, int $yOffset = 0, array $listeners = null) : void{
+    final public function broadcastImage(MapImage|null $mapImage = null, int $xOffset = 0, int $yOffset = 0, ?array $listeners = null) : void{
         if($listeners === null){
             $listeners = $this->listeners;
         }
         foreach($listeners as $session){
-            $this->sendImage($session, $mapImage ?? null, $xOffset, $yOffset);
+            $this->sendImage($session, $mapImage, $xOffset, $yOffset);
         }
     }
 
     final public function sendImage(NetworkSession $session, MapImage|null $mapImage = null, int $xOffset = 0, int $yOffset = 0) : void{
-        $pk = new ClientboundMapItemDataPacket();
-        $pk->mapId = $this->getId();
+        $pk = $this->createPacket();
         $pk->colors = $mapImage ?? $this->getImage($session);
-        $pk->scale = 0; // TODO: Implement scaling
         $pk->xOffset = $xOffset;
         $pk->yOffset = $yOffset;
         $session->sendDataPacket($pk);
@@ -163,10 +171,9 @@ abstract class Map{
     }
 
     final public function sendDeco(NetworkSession $session, int $icon, int $rotation, int $xOffset, int $yOffset, string $label, Color $color) : void{
-        $pk = new ClientboundMapItemDataPacket();
-        $pk->mapId = $this->getId();
-        $pk->scale = 0; // TODO: Implement scaling
-        $pk->decorations = [new MapDecoration($icon, $rotation, $xOffset, $yOffset, $label, $color)];
+        $pk = $this->createPacket();
+        // The wire format holds the offsets as bytes, so negative offsets are written in two's complement
+        $pk->decorations = [new MapDecoration($icon, $rotation & 0xff, $xOffset & 0xff, $yOffset & 0xff, $label, $color)];
         $session->sendDataPacket($pk);
 
         $this->addListener($session);

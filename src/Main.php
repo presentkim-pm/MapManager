@@ -26,15 +26,15 @@ declare(strict_types=1);
 
 namespace ref\api\mapmanager;
 
+use pocketmine\color\Color;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\item\ItemFactory;
-use pocketmine\item\ItemIdentifier;
-use pocketmine\item\ItemIds;
 use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\plugin\PluginBase;
 use ref\api\mapmanager\item\FilledMap;
+use ref\api\mapmanager\map\StaticMap;
+use ref\api\mapmanager\utils\MapImageUtils;
 
 final class Main extends PluginBase implements Listener{
     private MapManager $mapManager;
@@ -42,9 +42,7 @@ final class Main extends PluginBase implements Listener{
     protected function onEnable() : void{
         $this->mapManager = MapManager::getInstance();
 
-        $filledMap = new FilledMap(new ItemIdentifier(ItemIds::FILLED_MAP, 0), "Filled Map");
-        $filledMap->setUuid(0); // Prevent map id set to -1, -1 will be broken client
-        ItemFactory::getInstance()->register($filledMap, true);
+        FilledMap::register();
 
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
     }
@@ -53,7 +51,10 @@ final class Main extends PluginBase implements Listener{
     public function onDataPacketReceived(DataPacketReceiveEvent $event) : void{
         $packet = $event->getPacket();
         if($packet instanceof MapInfoRequestPacket){
-            $this->mapManager->get($packet->mapId)?->sendImage($event->getOrigin());
+            // Answer with the requested map id, and never register the session as a listener of the shared fallback map
+            $map = $this->mapManager->getOrNull($packet->mapId)
+                ?? new StaticMap($packet->mapId, MapImageUtils::fromOneColor(new Color(0, 0, 0, 0), 1, 1));
+            $map->sendImage($event->getOrigin());
         }
     }
 

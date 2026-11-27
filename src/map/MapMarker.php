@@ -41,32 +41,16 @@ final class MapMarker{
     public const ICON_HOUSE = 14;
     public const ICON_OCEAN_MONUMENT = 15;
 
-    /** @url https://minecraft.fandom.com/wiki/Map#Map_icons */
-    public int $icon;
-
-    /** It is limited from 0 to 127 to fit the map size. */
-    public float $x;
-
-    /** It is limited from 0 to 127 to fit the map size. */
-    public float $y;
-
-    /** It is limited from 0 to 360. */
-    public float $rotation;
-
-    /** If null it means as rgb(255,255,255). */
-    public ?Color $color;
-
     public function __construct(
-        int $icon = self::ICON_PLAYER,
-        float $x = 0,
-        float $y = 0,
-        float $rotation = 0,
-        Color|null $color = null
-    ){
-        $this->icon = $icon;
-        $this->x = $x;
-        $this->y = $y;
-        $this->rotation = $rotation;
-        $this->color = $color;
-    }
+        /** @url https://minecraft.fandom.com/wiki/Map#Map_icons */
+        public int $icon = self::ICON_PLAYER,
+        /** It is limited from 0 to 127 to fit the map size. */
+        public float $x = 0,
+        /** It is limited from 0 to 127 to fit the map size. */
+        public float $y = 0,
+        /** It is limited from 0 to 360. */
+        public float $rotation = 0,
+        /** If null it means as rgb(255,255,255). */
+        public ?Color $color = null
+    ){ }
 }
