@@ -11,7 +11,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h3>mapmanager (refMapManager)</h3>
+  <h3>mapmanager (MapManager)</h3>
   <p align="center">
     A simple map data manager for Minecraft Bedrock (axolotl-pm/PocketMine-MP), which adds the filled map item.
 
@@ -46,7 +46,7 @@
     which uses BedrockProtocol 64 (Bedrock `1.26.60`).
   - PHP `8.4` or higher.
 - **Installation**
-  - Download `refMapManager.phar` from [GitHub Releases][releases-url] and place it into your server's `plugins` directory.
+  - Download `MapManager.phar` from [GitHub Releases][releases-url] and place it into your server's `plugins` directory.
   - Restart the server; the plugin will load automatically according to `plugin.yml`.
 - **Old versions**
   - The version for the old PocketMine-MP API 4 (`1.0.0`) is kept on the

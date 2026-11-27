@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1 (2026-11-27)
+
+### Changed
+- The plugin name is now `MapManager` instead of `refMapManager`. The data folder moves with it, so rename
+  `plugin_data/refMapManager` to `plugin_data/MapManager` to keep existing settings, and update any `depend` / `softdepend` entries.
+
 ## 2.0.0 (2026-11-27)
 
 The version for the old [PocketMine-MP](https://github.com/pmmp/PocketMine-MP) API 4 is kept on the
